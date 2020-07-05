@@ -30,18 +30,27 @@
 
 \hwtitle
   {Assignment 1}
-  {Will Crichton (wcrichto)} %% REPLACE THIS WITH YOUR NAME/ID
+  {b05902132} %% REPLACE THIS WITH YOUR NAME/ID
 
 \problem{Problem 1}
 
 Part 1:
 
 \begin{alignat*}{1}
-\msf{Property}~p ::= \qamp \varepsilon \\
-\mid \qamp \ldots \\
+\msf{StringProperty}~p_s ::= \qamp \varepsilon \\
+\mid \qamp =s \\
 \\
-\msf{Schema}~\tau ::= \qamp \tnum \prop{p} \\
-\mid \qamp \ldots
+\msf{NumberProperty}~p_n ::= \qamp \varepsilon \\
+    \mid \qamp \pgt{n} \\
+    \mid \qamp \plt{n} \\
+    \mid \qamp \peq{n} \\
+    \mid \qamp p_n \lor p_n \\
+    \mid \qamp p_n \land p_n \\
+\msf{Schema}~\tau ::= \qamp \tstr \prop{p_s} \\
+    \mid \qamp \tnum \prop{p_n} \\
+    \mid \qamp \tbool \\
+    \mid \qamp \jarr{\tau} \\
+    \mid \qamp \jobj{(s: \tau)^*} \\
 \end{alignat*}
 
 Part 2:
