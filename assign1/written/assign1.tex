@@ -64,7 +64,16 @@ Part 2:
 
 \ir{S-Bool-True}{\ }{\matches{\truet}{\tbool}}
 
-% Inference rules go here
+\ir{S-List}
+    {\forall{}i=$0$...|j|-$1$.\matches{j_i}{\tau}}
+    {\matches{\jarr{j^*}}{\jarr{\tau}}}
+    
+\ir{S-Obj}
+    {\forall{}i=$0$...|s|-1 .\matches{s_i}{\tau_i}}
+    {
+        \matches{\jobj{(s_i:j_i)...}}
+                {\jobj{(s_i:\tau_i)...}}
+    }
 
 \end{mathpar}
 
