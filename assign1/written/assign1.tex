@@ -16,6 +16,9 @@
 \newcommand{\aidx}[2]{[#1]\,{#2}}        % \aidx{i}{a} = [i] a
 \newcommand{\apipe}[1]{\mid {#1}}        % \apipe{a} = | a
 
+% My own command
+\newcommand{\eval}[2]{#1 \boldsymbol{\mapsto} #2} % \eval{a}{b} = a |-> b
+
 % Other useful syntax commands:
 %
 % \msf{x} = x (not italicised)
@@ -39,6 +42,7 @@ Part 1:
 \begin{alignat*}{1}
 \msf{StringProperty}~p_s ::= \qamp \varepsilon \\
 \mid \qamp =s \\
+\mid \qamp p_s \lor{} p_s
 \\
 \msf{NumberProperty}~p_n ::= \qamp \varepsilon \\
     \mid \qamp \pgt{n} \\
@@ -50,7 +54,7 @@ Part 1:
     \mid \qamp \tnum \prop{p_n} \\
     \mid \qamp \tbool \\
     \mid \qamp \jarr{\tau} \\
-    \mid \qamp \jobj{(s: \tau)^*} \\
+    \mid \qamp \jobj{(s: \tau)^*} 
 \end{alignat*}
 
 Part 2:
@@ -61,27 +65,53 @@ Part 2:
 \begin{mathpar}
 
 \ir{S-Bool-False}{\ }{\matches{\falset}{\tbool}}
-
 \ir{S-Bool-True}{\ }{\matches{\truet}{\tbool}}
+
+\ir{S-String-Any}{\ }{\matches{s}{\tstr\prop{\varepsilon}}}
+\ir{S-String-Eq}{s'=s}{\matches{s'}{\tstr\prop{=s}}} \\
+
+\ir{S-Num-Any} {\ }{\matches{n}{\tnum\prop{\varepsilon}}}
+\ir{S-Num-Eq} {n'=n }{\matches{n'}{\tnum\prop{=n}}}
+
+\ir{S-Num-Lt} {n'<n }{\matches{n'}{\tnum\prop{<n}}}
+\ir{S-Num-Gt} {n'>n }{\matches{n'}{\tnum\prop{>n}}} 
+
+\ir{S-Num-And} {\matches{n}{\tnum\prop{p_1}} \\ \matches{n}{\tnum\prop{p_2}} }
+{\matches{n}{\tnum\prop{p_1 \land p_2}}} \\
+\ir{S-Num-Lor} {\matches{n}{\tnum\prop{p_1}}}{\matches{n}{\tnum\prop{p_1 \lor p_2}}}
+\ir{S-Num-Ror} {\matches{n}{\tnum\prop{p_2}}}{\matches{n}{\tnum\prop{p_1 \lor p_2}}}
 
 \ir{S-List}
     {\forall{}i=$0$...|j|-$1$.\matches{j_i}{\tau}}
     {\matches{\jarr{j^*}}{\jarr{\tau}}}
     
 \ir{S-Obj}
-    {\forall{}i=$0$...|s|-1 .\matches{s_i}{\tau_i}}
+    {\forall{}i=$0$...|j|-1 .\matches{j_i}{\tau_i}}
     {
         \matches{\jobj{(s_i:j_i)...}}
                 {\jobj{(s_i:\tau_i)...}}
     }
+% Inference rules go here
 
 \end{mathpar}
 
-\problem{Problem 2}
+\problem{Problem 2} 
 
 Part 1:
 
 \begin{mathpar}
+\ir{A-Indexing}
+    {}
+    {\eval{([n]a,\jarr{j})}{(a, j_n)}}
+
+\ir{A-Obj}
+    {}
+    {\eval{(.sa, \jobj{(s, j),...})} {(a, j_s)} }
+
+\ir{A-Pipe}
+    {\forall{} i\in $0$..|j| - $1$ . \eval{(a_1a_2, j_i)} (a_2, j'_i)} {\eval {(|a_1a_2, \jarr{j^*})} {(|a_2, \jarr{(j')^*})} }
+
+\ir{A-Pipe-Empty}{}{\eval {(|\varepsilon, \jarr{j})} {(\varepsilon, \jarr{j})} }
 % Inference rules go here
 \end{mathpar}
 
