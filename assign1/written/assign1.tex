@@ -86,10 +86,10 @@ Part 2:
     {\matches{\jarr{j^*}}{\jarr{\tau}}}
     
 \ir{S-Obj}
-    {\forall{}i=$0$...|j|-1 .\matches{j_i}{\tau_i}}
+    {\forall{}s'\in{}s.\matches{j_{s'}}{\tau_{s'}}}
     {
-        \matches{\jobj{(s_i:j_i)...}}
-                {\jobj{(s_i:\tau_i)...}}
+        \matches{\jobj{(s:j)^*}}
+                {\jobj{(s:\tau)^*}}
     }
 % Inference rules go here
 
@@ -118,7 +118,14 @@ Part 1:
 Part 2:
 
 \begin{mathpar}
-% Inference rules go here
+\ir{I-Empty} { } {\matches{\varepsilon}{\tau} }
+
+\ir{I-Obj} {\matches{a}{\tau}} {\matches{sa}{ \jobj{(s:\tau),...} }} 
+
+\ir{I-Indexing}{\matches{a}{\tau}}
+   {\matches{[n]a}{\jarr{\tau}}}
+
+\ir{I-Piping} {\matches{a}{\tau}} {\matches{|a}{\jarr{\tau}}}
 \end{mathpar}
 
 \textit{Accessor safety}: for all $a, j, \tau$, if $\matches{a}{\tau}$ and $\matches{j}{\tau}$, then there exists a $j'$ such that $\evals{(a, j)}{\aeps, j'}$.
