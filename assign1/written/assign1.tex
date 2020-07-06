@@ -106,7 +106,7 @@ Part 1:
 
 \ir{A-Obj}
     {}
-    {\eval{(.sa, \jobj{(s, j),...})} {(a, j_s)} }
+    {\eval{(.sa, \jobj{(s, j),...})} {(a, j)} }
 
 \ir{A-Pipe}
     {\forall{} i\in $0$..|j| - $1$ . \eval{(a_1a_2, j_i)} (a_2, j'_i)} {\eval {(|a_1a_2, \jarr{j^*})} {(|a_2, \jarr{(j')^*})} }
@@ -132,6 +132,27 @@ Part 2:
 
 \begin{proof}
 % Proof goes here.
+    We perform an induction on structure of the accessor $a$.
+
+    Case $\varepsilon{}$: For any j  $\evals{(\varepsilon{},j)}{(\varepsilon{},j)}$ , so the theorem is trivailly true.
+
+    Case $.sa'$: According to I-Obj  the only relevent schemas ($\tau$ such that $\matches{.sa'}{\tau}$) are in forms of $\jobj{s:\tau',...}$.
+    According to S-Obj, the only relevent json objects ($j$ such that $\matches{j}{\tau}$) are in form $\jobj{s:j',...}$. 
+    Using A-Obj we have $\eval{(.sa',j)}{(a',j')}$.
+
+    According to inversion lemma, I-Obj, S-Obj, we also have $\matches{a'}{\tau{}'}$ and $\matches{j'}{\tau{}'}$.
+    According to the induction hypothesis, we have $\exists j''.\evals{(a',j')}{(\varepsilon ,j'')}$.
+    Combining all operations leads to $\exists j''. \evals{(.sa',j)}{(\varepsilon ,j'')}$
+
+    case $[n]a'$ : Similarly, according to I-Indexing, $\tau$ are in forms of $\jarr{\tau'}$, and according to S-List, $j$ are in the forms of $\jarr{j'}$. Using A-Indexing we have $\eval{([n]a',j)}{(a',j'_n)}$.
+    According to inversion lemma, I-Indexing, and S-List, we have $\matches{a}{\tau'}$ and $\matches{j'_n}{\tau'}$.
+    Using the induction hypothesis, $\evals{(a,j'_n)}{(\varepsilon,j'')}$. Therefore we have $\evals{([n]a',j)}{(\varepsilon,j'')}$.
+
+    %TODO : piping should use induction on the length of a instead.
+    case $|\varepsilon$: According to I-Piping, $\tau$ is in form $\jarr{\tau'}$, and according to S-List, $j$ is in form $\jarr{j'}$, so A-Pipe-Empty can be applied. $\eval{(|\varepsilon,j)}{(\varepsilon,\jarr{j'})}$, naturally $\evals{(|\varepsilon,j)}{(\varepsilon,\jarr{j'})}$.
+
+    case $|a_1a'|$: Similar to the last case, we have $\tau$ is in form $\jarr{\tau'}$ and $j$ is in form $\jarr{j'}$. Usign the inversion lemma, we have $\matches{a_1a'}{\tau'}$ and $\matches{j'_n}{\tau'}$. The induction hypothesis implies $\evals{(a_1a',j'_n)}{(\varepsilon, j'')}$. Since $|a_1a'| \ge 1$, there exists $j'''$ such that $\eval{(a_1a',j_n)}{(a',j''')}$. % Required as we are using small steps...
+    Using A-Pipe we have $\eval{(|a_1a',\jarr{j^*})}{(|a',\jarr{j'''^*})}$. By induction hypothesis we have $\evals{(|a_1a',j'_n)}{(\varepsilon, \jarr{j''})}$ .
 \end{proof}
 
 \end{document}
