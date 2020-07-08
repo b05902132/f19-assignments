@@ -29,7 +29,46 @@
     {\app{(\fun{x}{\app{(\fun{\_}{x})}{*}})}{D}}}}
 \end{mathpar}
 
-Fill in the remaining steps here.
+\begin{mathpar}
+    \text{Step 2:}\qquad
+    \ir{D-App-Body}
+    {\ir{D-App-Body}
+        {\ir{D-App-Body}
+            {\ir{D-App-Done} { } {x \rightarrow D \in \{x\rightarrow D, \_ \rightarrow * \} } }
+            {\dynJ{\{x \rightarrow D, \_ \rightarrow * \}}{\steps
+                {x}
+                {D}}}}
+        {\dynJ{\{x \rightarrow D\}}{\steps
+            {{\app{(\fun{\_}{x})}{*}}}
+            {{\app{(\fun{\_}{D})}{*}}} }}
+    }
+    {\dynJ{\varnothing}{\steps
+        {\app{(\fun{x}{\app{(\fun{\_}{x})}{*}})}{D}}
+        {\app{(\fun{x}{\app{(\fun{\_}{D})}{*}})}{D}} }}
+\end{mathpar}
+
+\begin{mathpar}
+    \text{Step 3:}\qquad
+    \ir{D-App-Body}
+    {\ir{D-App-Body}
+        {\ir {D-App-Done} { } {\val {D} }
+        }
+        {\dynJ{\{ x \rightarrow D \} }{\steps
+            {{\app{(\fun{\_}{D})}{*}}}
+            { D } }}
+    }
+    {\dynJ{\varnothing}{\steps
+        {\app{(\fun{x}{\app{(\fun{\_}{D})}{*}})}{D}}
+        {\app{(\fun{x}{D})} {D} } }}
+\end{mathpar}
+
+\begin{mathpar}
+    \text{Step 4:}\qquad
+    \ir{D-App-Done} {\val {D}  }
+    {\dynJ{\varnothing}{\steps
+        {\app{(\fun{x}{D})} {D} }
+        { D } }}
+\end{mathpar}
 
 \textbf{Part 2:}
 
