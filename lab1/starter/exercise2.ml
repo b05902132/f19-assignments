@@ -31,27 +31,38 @@ let main () =
     {weather = Rainy 0.7; temperature = 59.; humidity = 0.2};
   ] in
 
-  let just_temp (l : forecast list) : float list =
-       raise Unimplemented
+  let rec just_temp (l : forecast list) : float list =
+    match l with 
+    | [] -> []
+    | x :: xs -> x.temperature :: just_temp xs
   in
 
   assert (just_temp example_forecasts = [70.; 62.; 55.; 68.; 52.; 59.]);
 
   let average_temp (l : forecast list) : float =
-       raise Unimplemented
+    let 
+      sum = List.fold_left ~init:0. ~f:(+.) (just_temp l)
+    in
+    sum /. ( Float.of_int (List.length l))
   in
 
   assert (average_temp example_forecasts = 61.);
 
   let humid_rainy_days (l : forecast list) : forecast list =
-       raise Unimplemented
+    let is_rainy ( day: forecast ) : bool = 
+      match day.weather with
+      | Rainy chance -> chance >= 0.7
+      | other -> false
+    in
+    let is_hum (day: forecast) : bool = day.humidity >= 0.5 in
+    List.filter ~f:(fun x -> (is_hum x) && (is_rainy x)) l
   in
 
   assert (humid_rainy_days example_forecasts = [
     {weather = Rainy 0.7; temperature = 55.; humidity = 0.5}]);
 
   let weather_histogram (l : forecast list) : (weather_type * int) list =
-       raise Unimplemented
+    raise Unimplemented
   in
 
   assert (weather_histogram example_forecasts = [
