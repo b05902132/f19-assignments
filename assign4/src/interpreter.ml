@@ -24,6 +24,33 @@ let rec trystep (e : Expr.t) : outcome =
       | Expr.Div -> (/)
     in
     Step (Expr.Num (f n1 n2) )
+  | Expr.Relop {relop; left; right} ->
+    (left, fun left' -> Expr.Relop{relop; left=left'; right}) |-> fun() ->
+    (right, fun right' -> Expr.Relop {relop; left; right=right'}) |-> fun() ->
+    let (Expr.Num l_num, Expr.Num r_num) = (left, right) in
+    let res = match relop with
+      | Expr.Lt -> l_num < r_num
+      | Expr.Gt -> l_num > r_num
+      | Expr.Eq -> l_num = r_num
+    in
+    Step (if res then Expr.True else Expr.False)
+
+  | Expr.If {cond; then_; else_} ->
+    (cond, fun cond' -> Expr.If {cond = cond'; then_; else_}) |-> fun () ->
+      (match cond with
+      | Expr.True -> Step then_
+      | Expr.False -> Step else_ )
+  
+  | Expr.And {left; right} ->
+    (left, fun left' -> Expr.And {left=left'; right}) |-> fun () ->
+      (right, fun right' -> Expr.And {left; right=right'}) |-> fun () ->
+      if (left, right) = (Expr.True, Expr.True) then Step Expr.True else Step Expr.False
+
+  | Expr.Or {left; right} ->
+    (left, fun left' -> Expr.Or {left=left'; right}) |-> fun () ->
+      (right, fun right' -> Expr.Or {left; right=right'}) |-> fun () ->
+      if (left, right) = (Expr.False, Expr.False) then Step Expr.False else Step Expr.True
+
 
   (* Add more cases here! *)
 

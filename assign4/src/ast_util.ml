@@ -21,6 +21,7 @@ module Type = struct
     let rec aux (depth : int String.Map.t) (tau : t) : t =
       match tau with
       | Num -> Num
+      | Bool -> Bool
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
