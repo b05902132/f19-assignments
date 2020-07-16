@@ -10,7 +10,7 @@ module Type = struct
 
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
     match tau with
-    | Num -> Num
+    | (Num | Bool | Unit ) -> tau
     (* Add more cases here! *)
     | _ -> raise Unimplemented
 
@@ -20,8 +20,7 @@ module Type = struct
   let rec to_debruijn (tau : t) : t =
     let rec aux (depth : int String.Map.t) (tau : t) : t =
       match tau with
-      | Num -> Num
-      | Bool -> Bool
+      | (Num | Bool | Unit) -> tau
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
@@ -82,7 +81,7 @@ module Expr = struct
 
   let rec substitute_map (rename : t String.Map.t) (e : t) : t =
     match e with
-    | Num _ -> e
+    | (Num _ | True | False | Unit) -> e
     | Binop {binop; left; right} -> Binop {
       binop;
       left = substitute_map rename left;
@@ -96,7 +95,7 @@ module Expr = struct
   let rec to_debruijn (e : t) : t =
     let rec aux (depth : int String.Map.t) (e : t) : t =
       match e with
-      | Num _ -> e
+      | (Num _ | True | False | Unit) -> e
       | Binop {binop; left; right} -> Binop {
         binop; left = aux depth left; right = aux depth right}
       (* Add more cases here! *)
