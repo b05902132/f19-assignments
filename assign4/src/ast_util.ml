@@ -8,9 +8,24 @@ let fresh s = s ^ "'"
 module Type = struct
   open Ast.Type
 
+  let rec map_field (expr: t) ~(f: (t -> t)) : t=
+    match expr with
+    | (Num | Bool | Unit) -> expr
+    | Fn {arg; ret} -> Fn {
+        arg = map_field arg ~f:f;
+        ret=map_field ret ~f:f}
+    | Product {left; right} -> Product {
+        left = map_field left ~f:f;
+        right = map_field right ~f:f }
+    | Sum {left; right} -> Sum {
+        left = map_field left ~f:f;
+        right = map_field right ~f:f}
+    | _ -> raise Unimplemented
+
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
     match tau with
-    | (Num | Bool | Unit ) -> tau
+    | (Num | Bool | Unit | Fn _ | Product _ | Sum _ ) ->
+      map_field tau ~f:(substitute_map rename)
     (* Add more cases here! *)
     | _ -> raise Unimplemented
 
@@ -20,7 +35,9 @@ module Type = struct
   let rec to_debruijn (tau : t) : t =
     let rec aux (depth : int String.Map.t) (tau : t) : t =
       match tau with
-      | (Num | Bool | Unit) -> tau
+      | (Num | Bool | Unit | Fn _ | Product _ | Sum _ ) ->
+        map_field tau ~f:(aux depth)
+
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
@@ -79,13 +96,40 @@ end
 module Expr = struct
   open Ast.Expr
 
+  let rec map_field (expr:t) ~(f: t -> t) : t =
+    match expr with
+    | (Num _ | True | False | Unit) -> expr
+    | Binop {binop; left; right} -> Binop {
+        binop;
+        left = map_field left ~f:f;
+        right = map_field right ~f:f}
+    | If {cond; then_; else_} -> If {
+        cond = map_field cond ~f:f;
+        then_ = map_field then_ ~f:f;
+        else_ = map_field else_ ~f:f}
+    | And {left; right} -> And {
+        left = map_field left ~f:f;
+        right = map_field right ~f:f}
+    | Or {left; right} -> Or {
+        left = map_field left ~f:f;
+        right = map_field right ~f:f}
+    | Relop {relop; left; right} -> Relop{
+        relop;
+        left = map_field left ~f:f;
+        right = map_field right ~f:f}
+    | Pair {left; right} -> Pair{
+        left = map_field left ~f:f;
+        right = map_field right ~f:f}
+    | Project{e; d} -> Project{
+        e = map_field e ~f:f;
+        d }
+
+    | _ -> raise Unimplemented
+
   let rec substitute_map (rename : t String.Map.t) (e : t) : t =
     match e with
-    | (Num _ | True | False | Unit) -> e
-    | Binop {binop; left; right} -> Binop {
-      binop;
-      left = substitute_map rename left;
-      right = substitute_map rename right}
+    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _) ->
+      map_field e ~f:(substitute_map rename)
     (* Put more cases here! *)
     | _ -> raise Unimplemented
 
@@ -95,9 +139,8 @@ module Expr = struct
   let rec to_debruijn (e : t) : t =
     let rec aux (depth : int String.Map.t) (e : t) : t =
       match e with
-      | (Num _ | True | False | Unit) -> e
-      | Binop {binop; left; right} -> Binop {
-        binop; left = aux depth left; right = aux depth right}
+      | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _) ->
+        map_field e ~f:(aux depth)
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
