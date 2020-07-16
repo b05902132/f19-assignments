@@ -12,6 +12,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
 
   match e with
   | Expr.Num _ -> Ok Type.Num
+  | Expr.Unit -> Ok Type.Unit
 
   | Expr.Binop {left; right; _} ->
     typecheck_expr ctx left >>= fun tau_left ->
