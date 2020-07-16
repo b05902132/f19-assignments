@@ -231,13 +231,14 @@ module Expr = struct
     assert (not (aequiv (p "fun (x : num) -> fun (x : num) -> x + x")
                    (p "fun (x : num) -> fun (y : num) -> y + x")));
 
+    (** generic functions --
     assert (
       aequiv
         (p "tyfun a -> fun (x : a) -> x")
-        (p "tyfun b -> fun (x : b) -> x"));
+        (p "tyfun b -> fun (x : b) -> x")); *)
 
     ()
 
   (* Uncomment the line below when you want to run the inline tests. *)
-  (* let () = inline_tests () *)
+  let () = inline_tests ()
 end
