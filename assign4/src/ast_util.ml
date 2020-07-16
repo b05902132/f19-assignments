@@ -165,7 +165,7 @@ module Expr = struct
       | Lam {x; e; tau} ->
         let new_depth = String.Map.map depth ~f:(fun x -> x + 1) in
         let new_depth' = String.Map.set new_depth ~key:x ~data:0 in
-        Lam {x = "_"; e = aux new_depth' e; tau}
+        Lam {x = "_"; e = aux new_depth' e; tau = Var "_" }
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
