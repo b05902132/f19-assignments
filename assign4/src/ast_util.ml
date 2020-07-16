@@ -123,13 +123,28 @@ module Expr = struct
     | Project{e; d} -> Project{
         e = map_field e ~f:f;
         d }
+    | App {lam; arg} -> App {
+        lam = map_field lam ~f:f;
+        arg = map_field arg ~f:f}
+
+    (* Leaf nodes *)
+    | ((Lam _) | (Var _) ) -> f expr
 
     | _ -> raise Unimplemented
 
   let rec substitute_map (rename : t String.Map.t) (e : t) : t =
     match e with
-    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _) ->
+    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ ) ->
       map_field e ~f:(substitute_map rename)
+    | Var v ->
+      (match String.Map.find rename v with
+       | None -> e
+       | Some e' -> e' )
+    | Lam {x; e; tau} ->
+      let x' = fresh x in
+      let new_map = String.Map.set rename ~key:x ~data:(Var x') in
+      let e' = substitute_map new_map e in
+      Lam {x = x'; e= e'; tau}
     (* Put more cases here! *)
     | _ -> raise Unimplemented
 
@@ -139,8 +154,18 @@ module Expr = struct
   let rec to_debruijn (e : t) : t =
     let rec aux (depth : int String.Map.t) (e : t) : t =
       match e with
-      | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _) ->
+      | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _) ->
         map_field e ~f:(aux depth)
+
+      | Var x ->
+        (match String.Map.find depth x with
+         | None -> e
+         | Some idx -> Var (string_of_int idx) )
+
+      | Lam {x; e; tau} ->
+        let new_depth = String.Map.map depth ~f:(fun x -> x + 1) in
+        let new_depth' = String.Map.set new_depth ~key:x ~data:0 in
+        Lam {x = "_"; e = aux new_depth' e; tau}
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
