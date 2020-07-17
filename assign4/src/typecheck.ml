@@ -21,7 +21,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
      | (Type.Num, Type.Num) -> Ok Type.Num
      | _ -> Error (
        Printf.sprintf
-         "Binary operands have incompatible types: (%s : %s) and (%s : %s)"
+         "Binary operands have incompatible types: (%s : %s), (%s : %s)"
          (Expr.to_string left) (Type.to_string tau_left)
          (Expr.to_string right) (Type.to_string tau_right)))
 
@@ -31,7 +31,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
     (match (left_t, right_t) with
       | (Type.Num, Type.Num) -> Ok Type.Bool
       | _ -> Error (
-          Printf.sprintf "Can't compare (%s: %s) and (%s: %s)! (Both need to be Num)"
+          Printf.sprintf "Relop operands have incompatible types: (%s : %s) and (%s : %s)"
           (Expr.to_string left) (Type.to_string left_t)
           (Expr.to_string right) (Type.to_string right_t) ) )
 
@@ -43,7 +43,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
     ( match (left_t, right_t) with
       | (Type.Bool, Type.Bool) -> Ok Type.Bool
       | _ -> Error (
-          Printf.sprintf "Boolean operants requires boolean type: (%s: %s), (%s: %s)"
+          Printf.sprintf "Logical operands have incompatible types: (%s : %s) and (%s : %s)"
             (Expr.to_string left) (Type.to_string left_t)
             (Expr.to_string right) (Type.to_string right_t) ) )
 
@@ -53,11 +53,11 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
       typecheck_expr ctx else_ >>= fun else_t ->
       ( if not (aequiv cond_t Type.bool)
         then Error (
-            Printf.sprintf "If expression requires a Bool but the type of \"%s\" is %s!"
+            Printf.sprintf "If condition expression %s has type %s, expected bool"
               (Expr.to_string cond) (Type.to_string cond_t) )
         else if not (aequiv then_t else_t)
         then Error ( Printf.sprintf
-                     "The expressions following then and else should be of the same type: (%s : %s) (%s : %s)"
+                     "Then branch %s has type %s, not matching else branch type %s of type %s"
                      (Expr.to_string then_) (Type.to_string then_t)
                      (Expr.to_string else_) (Type.to_string else_t) )
         else Ok then_t)
