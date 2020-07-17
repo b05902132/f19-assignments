@@ -8,18 +8,18 @@ let fresh s = s ^ "'"
 module Type = struct
   open Ast.Type
 
-  let rec map_field (expr: t) ~(f: (t -> t)) : t=
+  let map_field (expr: t) ~(f: (t -> t)) : t=
     match expr with
     | (Num | Bool | Unit) -> expr
     | Fn {arg; ret} -> Fn {
-        arg = map_field arg ~f:f;
-        ret=map_field ret ~f:f}
+        arg = f arg;
+        ret = f ret}
     | Product {left; right} -> Product {
-        left = map_field left ~f:f;
-        right = map_field right ~f:f }
+        left = f left;
+        right = f right }
     | Sum {left; right} -> Sum {
-        left = map_field left ~f:f;
-        right = map_field right ~f:f}
+        left = f left;
+        right = f right}
     | Var _ -> f expr
     | _ -> raise Unimplemented
 
@@ -100,39 +100,39 @@ end
 module Expr = struct
   open Ast.Expr
 
-  let rec map_field (expr:t) ~(f: t -> t) : t =
+  let map_field (expr:t) ~(f: t -> t) : t =
     match expr with
     | (Num _ | True | False | Unit) -> expr
     | Binop {binop; left; right} -> Binop {
         binop;
-        left = map_field left ~f:f;
-        right = map_field right ~f:f}
+        left = f left;
+        right = f right}
     | If {cond; then_; else_} -> If {
-        cond = map_field cond ~f:f;
-        then_ = map_field then_ ~f:f;
-        else_ = map_field else_ ~f:f}
+        cond = f cond;
+        then_ = f then_;
+        else_ = f else_ }
     | And {left; right} -> And {
-        left = map_field left ~f:f;
-        right = map_field right ~f:f}
+        left = f left;
+        right = f right }
     | Or {left; right} -> Or {
-        left = map_field left ~f:f;
-        right = map_field right ~f:f}
+        left = f left;
+        right = f right }
     | Relop {relop; left; right} -> Relop{
         relop;
-        left = map_field left ~f:f;
-        right = map_field right ~f:f}
+        left = f left;
+        right = f right }
     | Pair {left; right} -> Pair{
-        left = map_field left ~f:f;
-        right = map_field right ~f:f}
+        left = f left;
+        right = f right }
     | Project{e; d} -> Project{
-        e = map_field e ~f:f;
+        e = f e;
         d }
     | App {lam; arg} -> App {
-        lam = map_field lam ~f:f;
-        arg = map_field arg ~f:f}
+        lam = f lam;
+        arg = f arg }
 
-    (* Leaf nodes *)
-    | ((Lam _) | (Var _) ) -> f expr
+    (* No idea how to apply. It's an error to call this function on them. *)
+    | ((Lam _) | (Var _) ) -> raise Unimplemented
 
     | _ -> raise Unimplemented
 
