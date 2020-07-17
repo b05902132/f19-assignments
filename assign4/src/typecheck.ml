@@ -125,6 +125,13 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
                       (Expr.to_string e) (Type.to_string e_t) )
     )
 
+  | Expr.Fix {x; tau; e} ->
+    let new_ctx = String.Map.set ctx ~key:x ~data:tau in
+    typecheck_expr new_ctx e >>= fun tau' ->
+    if aequiv tau tau' then Ok tau
+    else Error (Printf.sprintf "Fixpoint expression %s of type %s does not match argument type %s"
+                  (Expr.to_string e) (Type.to_string tau') (Type.to_string tau) )
+
 
 
   (* Add more cases here! *)

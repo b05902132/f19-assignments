@@ -161,6 +161,11 @@ module Expr = struct
 
     | Inject {e;d;tau} -> Inject { e = substitute_map rename e; d; tau }
 
+    | Fix {x; tau; e} ->
+      let x' = fresh x in
+      let rename = String.Map.set rename ~key:x ~data:(Var x') in
+      Fix {x = x'; tau; e = substitute_map rename e}
+
     (* Put more cases here! *)
     | _ -> raise Unimplemented
 
@@ -193,6 +198,11 @@ module Expr = struct
           eright = aux (String.Map.set new_depth ~key:xright ~data:0) eright}
       | Inject {e; d; tau} ->
         Inject {e = aux depth e; d; tau = Var "_"}
+
+      | Fix {x; tau; e} ->
+        let depth = String.Map.map depth (fun x -> x + 1) in
+        let depth = String.Map.set depth ~key:x ~data:0 in
+        Fix {x = "_"; tau = Var "_"; e = aux depth e}
 
       (* Add more cases here! *)
       | _ -> raise Unimplemented

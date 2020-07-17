@@ -1,0 +1,2 @@
+letrec f: num -> num = fun (x: num) -> true in
+f

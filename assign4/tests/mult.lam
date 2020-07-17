@@ -1,0 +1,2 @@
+letrec mul : num -> (num -> num) = fun (m : num) -> ( fun (n : num) -> ( if m > 0 then n + (mul (m - 1) n) else 0) ) in
+mul 3 4

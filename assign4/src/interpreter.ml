@@ -72,6 +72,8 @@ let rec trystep (e : Expr.t) : outcome =
         | Right -> Ast_util.Expr.substitute xright e eright
       )
     )
+  | Expr.Fix record -> 
+    Step ( Ast_util.Expr.substitute record.x e record.e )
 
 
 
