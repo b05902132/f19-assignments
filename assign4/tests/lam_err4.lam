@@ -1,0 +1,1 @@
+let x:(num -> bool) -> bool -> bool = fun (f:num -> bool) -> f 0 in x

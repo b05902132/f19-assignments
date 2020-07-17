@@ -1,0 +1,1 @@
+let x: (num -> num) -> num -> num = fun (f:num -> num) -> f in x

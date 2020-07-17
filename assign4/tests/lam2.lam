@@ -1,0 +1,6 @@
+let n_zero : (num -> num) -> num -> num = fun (f:num -> num) -> fun (x: num) -> x in
+let n_four : (num -> num) -> num -> num = fun (f:num -> num) -> fun (x:num) -> f (f (f (f x))) in
+let nat_to_num : ((num -> num) -> num -> num) -> num = fun (n: (num -> num) -> num -> num) -> n (fun (x:num) -> x+1) 0 in
+let succ : ((num -> num) -> num -> num) -> (num -> num) -> num -> num =
+    fun (n:(num -> num) -> num -> num) -> fun (f: (num -> num)) -> fun (x: num) -> f (n f x) in
+(nat_to_num n_four) = 4 && (nat_to_num (succ (succ n_zero))) = 2

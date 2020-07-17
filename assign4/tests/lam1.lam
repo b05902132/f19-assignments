@@ -1,0 +1,2 @@
+let d : num -> num = fun (x:num) -> x + 1 in
+d 2
