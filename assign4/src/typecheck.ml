@@ -13,6 +13,10 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
   match e with
   | Expr.Num _ -> Ok Type.Num
   | Expr.Unit -> Ok Type.Unit
+  | Expr.Var x ->
+    ( match String.Map.find ctx x with
+      | Some t -> Ok t
+      | None -> Error (Printf.sprintf "Can't find the type of variable: %s" x) )
 
   | Expr.Binop {left; right; _} ->
     typecheck_expr ctx left >>= fun tau_left ->
@@ -61,6 +65,25 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
                      (Expr.to_string then_) (Type.to_string then_t)
                      (Expr.to_string else_) (Type.to_string else_t) )
         else Ok then_t)
+  | Expr.App {lam; arg} ->
+    typecheck_expr ctx arg >>= fun arg_t ->
+    typecheck_expr ctx lam >>= fun lam_t ->
+    let arg_expr = arg in
+    ( match lam_t with
+      | Fn {arg; ret} ->
+        if aequiv arg arg_t then Ok ret
+        else Error (Printf.sprintf "Can't apply (%s: %s) to (%s: %s)"
+                    (Expr.to_string lam) (Type.to_string lam_t)
+                    (Expr.to_string arg_expr) (Type.to_string arg_t))
+
+      | _ -> Error ( Printf.sprintf "Cannot apply non-function type (%s : %s)!"
+                     (Expr.to_string lam) (Type.to_string lam_t) )
+    )
+  | Expr.Lam {x; tau; e} ->
+    let ctx = String.Map.set ctx ~key:x ~data:tau in
+    typecheck_expr ctx e >>= fun ret ->
+      Ok (Type.Fn {arg = tau ; ret} )
+
 
   (* Add more cases here! *)
 
@@ -87,4 +110,4 @@ let inline_tests () =
   assert (Result.is_error (typecheck t5))
 
 (* Uncomment the line below when you want to run the inline tests. *)
-(* let () = inline_tests () *)
+let () = inline_tests ()
