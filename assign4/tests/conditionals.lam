@@ -1,0 +1,6 @@
+let a: num = if (2 > 1 || 2 < 3) then 2 else 3 in
+let b: bool = if ( 4 > 2 && 4 < 5)then 1>0  else false in
+let c: num = if (if (false || true) then true else true) then (if 3 < 1 && true then 0 else 2) else (if true then 2 else 0) in
+let d = if b then a else c + if b then c else a in
+let e = if d > 0 then 100 else 0 + if d < 0 then 10 else 0 in
+if e > (if true then 0 else 0) then e else e
