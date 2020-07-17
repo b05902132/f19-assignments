@@ -1,0 +1,1 @@
+let b: (num * bool) = (0, true) in b

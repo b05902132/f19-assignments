@@ -84,6 +84,20 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
     typecheck_expr ctx e >>= fun ret ->
       Ok (Type.Fn {arg = tau ; ret} )
 
+  | Expr.Pair {left; right} ->
+    typecheck_expr ctx left >>= fun left_t ->
+    typecheck_expr ctx right >>= fun right_t ->
+    Ok (Type.Product {left=left_t; right=right_t})
+  | Expr.Project {e; d} ->
+    typecheck_expr ctx e >>= fun e_t ->
+    ( match e_t with
+      | Type.Product {left; right} ->
+        (match d with
+         | Left -> Ok left
+         | Right -> Ok right)
+      | _ -> Error (Printf.sprintf "Attempted to project out of non-tuple %s with type %s"
+                    (Expr.to_string e) (Type.to_string e_t) ) )
+
 
   (* Add more cases here! *)
 

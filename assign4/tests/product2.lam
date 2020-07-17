@@ -1,0 +1,5 @@
+let p: bool * num = (true, 1) in
+let pp : bool * num = (p.L, p.R) in
+let not: bool -> bool = fun (b:bool) -> if b then false else true in
+let bool_eq : bool -> bool -> bool = fun (p:bool) -> fun (q:bool) -> ( p && q ) || ( (not p) && (not q)) in
+if (bool_eq p.L pp.L) && p.R = pp.R then true else false

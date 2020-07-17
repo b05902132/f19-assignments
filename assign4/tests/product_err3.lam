@@ -1,0 +1,2 @@
+let bad_proj : ((bool * bool) -> num) = fun (arg : (bool * bool)) -> arg.L in
+bad_proj (true, true)

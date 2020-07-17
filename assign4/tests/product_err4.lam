@@ -1,0 +1,1 @@
+let b: bool * int = (123, 456) in b
