@@ -20,12 +20,16 @@ module Type = struct
     | Sum {left; right} -> Sum {
         left = map_field left ~f:f;
         right = map_field right ~f:f}
+    | Var _ -> f expr
     | _ -> raise Unimplemented
 
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
     match tau with
     | (Num | Bool | Unit | Fn _ | Product _ | Sum _ ) ->
       map_field tau ~f:(substitute_map rename)
+    | Var v -> (match String.Map.find rename v with
+        | None -> tau
+        | Some x -> x )
     (* Add more cases here! *)
     | _ -> raise Unimplemented
 
@@ -37,7 +41,7 @@ module Type = struct
       match tau with
       | (Num | Bool | Unit | Fn _ | Product _ | Sum _ ) ->
         map_field tau ~f:(aux depth)
-
+      | (Var _) -> Var "_"
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
