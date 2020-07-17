@@ -1,0 +1,4 @@
+fun (x: num + bool) -> case x {
+    L(y) -> y + 1
+    | R(z) -> z
+}

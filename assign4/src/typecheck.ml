@@ -97,6 +97,34 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
          | Right -> Ok right)
       | _ -> Error (Printf.sprintf "Attempted to project out of non-tuple %s with type %s"
                     (Expr.to_string e) (Type.to_string e_t) ) )
+  | Expr.Inject {e; d; tau} ->
+    typecheck_expr ctx e >>= fun e_t ->
+    ( match tau with
+      | Type.Sum {left; right} ->
+        let expected_expr_t = (match d with | Left -> left | Right ->right) in
+        if aequiv expected_expr_t e_t then Ok tau
+        else Error (Printf.sprintf "Attempted to inject %s with actual type %s into sum type %s"
+                    (Expr.to_string e) (Type.to_string e_t) (Type.to_string tau) )
+
+      | _ -> Error (Printf.sprintf "Attempted to inject into non-sum type %s" (Type.to_string tau) )
+    )
+
+  | Expr.Case {e; xleft; eleft; xright; eright} ->
+    typecheck_expr ctx e >>= fun e_t ->
+    ( match e_t with
+      | Type.Sum {left; right} ->
+        let left_ctx = String.Map.set ctx ~key:xleft ~data:left in
+        let right_ctx = String.Map.set ctx ~key:xright~data:right in
+        typecheck_expr left_ctx eleft >>= fun l_type ->
+        typecheck_expr right_ctx eright >>= fun r_type ->
+        if aequiv l_type r_type then Ok l_type
+        else Error (Printf.sprintf "Case branch types aren't the same: %s != %s"
+                      (Type.to_string l_type) (Type.to_string r_type) )
+
+      | _ -> Error (Printf.sprintf "Casing on expression %s of non-sum type %s"
+                      (Expr.to_string e) (Type.to_string e_t) )
+    )
+
 
 
   (* Add more cases here! *)

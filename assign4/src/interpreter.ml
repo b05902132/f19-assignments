@@ -40,7 +40,7 @@ let rec trystep (e : Expr.t) : outcome =
       (match cond with
       | Expr.True -> Step then_
       | Expr.False -> Step else_ )
-  
+
   | Expr.And {left; right} ->
     (left, fun left' -> Expr.And {left=left'; right}) |-> fun () ->
       (right, fun right' -> Expr.And {left; right=right'}) |-> fun () ->
@@ -64,6 +64,14 @@ let rec trystep (e : Expr.t) : outcome =
           | Right -> Step right
          )
       )
+  | Expr.Case {e; xleft; eleft; xright; eright} ->
+    (e, fun e' -> Expr.Case { e=e'; xleft; eleft; xright; eright}) |-> fun() ->
+    ( match e with Expr.Inject{e; d; _} ->
+      Step ( match d with
+        | Left -> Ast_util.Expr.substitute xleft e eleft
+        | Right -> Ast_util.Expr.substitute xright e eright
+      )
+    )
 
 
 

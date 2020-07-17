@@ -132,7 +132,7 @@ module Expr = struct
         arg = f arg }
 
     (* No idea how to apply. It's an error to call this function on them. *)
-    | ((Lam _) | (Var _) ) -> raise Unimplemented
+    | ((Lam _) | (Var _) | (Case _) | Inject _) -> raise Unimplemented
 
     | _ -> raise Unimplemented
 
@@ -149,6 +149,18 @@ module Expr = struct
       let new_map = String.Map.set rename ~key:x ~data:(Var x') in
       let e' = substitute_map new_map e in
       Lam {x = x'; e= e'; tau}
+
+    | Case {e; xleft; eleft; xright; eright} ->
+      let (new_xleft, new_xright) = (fresh xleft, fresh xright) in
+      Case {
+        e = substitute_map rename e;
+        xleft = new_xleft;
+        eleft = substitute_map (String.Map.set rename ~key:xleft ~data:(Var new_xleft)) eleft;
+        xright = new_xright;
+        eright = substitute_map (String.Map.set rename ~key:xright ~data:(Var new_xright)) eright}
+
+    | Inject {e;d;tau} -> Inject { e = substitute_map rename e; d; tau }
+
     (* Put more cases here! *)
     | _ -> raise Unimplemented
 
@@ -170,6 +182,18 @@ module Expr = struct
         let new_depth = String.Map.map depth ~f:(fun x -> x + 1) in
         let new_depth' = String.Map.set new_depth ~key:x ~data:0 in
         Lam {x = "_"; e = aux new_depth' e; tau = Var "_" }
+
+      | Case {e; xleft; eleft; xright; eright} ->
+        let new_depth = String.Map.map depth ~f:(fun x -> x+1) in
+        Case {
+          e = aux depth e;
+          xleft = "_";
+          eleft = aux (String.Map.set new_depth ~key:xleft ~data:0) eleft;
+          xright = "_";
+          eright = aux (String.Map.set new_depth ~key:xright ~data:0) eright}
+      | Inject {e; d; tau} ->
+        Inject {e = aux depth e; d; tau = Var "_"}
+
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in

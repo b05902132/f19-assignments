@@ -1,0 +1,8 @@
+let x: (num + bool) = (inj 10 = L as num + bool ) in
+let y: (num + bool) = (inj true = R as num + bool ) in
+let foo: (num + bool) -> num = fun (x: num + bool) ->
+    case x {
+      L(n) -> 0 - n
+    | R(b) -> if b then 1 else 0 }
+in
+(foo x) + (foo y)
