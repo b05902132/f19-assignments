@@ -16,7 +16,7 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
   | Expr.Var x ->
     ( match String.Map.find ctx x with
       | Some t -> Ok t
-      | None -> Error (Printf.sprintf "Can't find the type of variable: %s" x) )
+      | None -> Error (Printf.sprintf "Unbound variable %s" x) )
 
   | Expr.Binop {left; right; _} ->
     typecheck_expr ctx left >>= fun tau_left ->
@@ -72,11 +72,11 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
     ( match lam_t with
       | Fn {arg; ret} ->
         if aequiv arg arg_t then Ok ret
-        else Error (Printf.sprintf "Can't apply (%s: %s) to (%s: %s)"
-                    (Expr.to_string lam) (Type.to_string lam_t)
+        else Error (Printf.sprintf "Attempted to call function %s of expected argument type %s with argument expression %s of actual type %s"
+                    (Expr.to_string lam) (Type.to_string arg)
                     (Expr.to_string arg_expr) (Type.to_string arg_t))
 
-      | _ -> Error ( Printf.sprintf "Cannot apply non-function type (%s : %s)!"
+      | _ -> Error ( Printf.sprintf "Attempted to call expression %s of non-function type %s as a function"
                      (Expr.to_string lam) (Type.to_string lam_t) )
     )
   | Expr.Lam {x; tau; e} ->
