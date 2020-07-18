@@ -1,0 +1,2 @@
+let id : forall a . a -> a = tyfun a -> fun (a : a) -> a in
+id [num] 1

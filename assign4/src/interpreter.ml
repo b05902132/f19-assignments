@@ -72,10 +72,12 @@ let rec trystep (e : Expr.t) : outcome =
         | Right -> Ast_util.Expr.substitute xright e eright
       )
     )
-  | Expr.Fix record -> 
+  | Expr.Fix record ->
     Step ( Ast_util.Expr.substitute record.x e record.e )
 
-
+  | Expr.TyApp {e; tau} ->
+    (e, fun e' -> TyApp {e=e'; tau} ) |-> fun () ->
+    ( match e with TyLam {e; _} -> Step e )
 
   (* Add more cases here! *)
 

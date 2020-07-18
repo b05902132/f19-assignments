@@ -131,8 +131,16 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
     if aequiv tau tau' then Ok tau
     else Error (Printf.sprintf "Fixpoint expression %s of type %s does not match argument type %s"
                   (Expr.to_string e) (Type.to_string tau') (Type.to_string tau) )
+  | Expr.TyLam {a; e} ->
+    typecheck_expr ctx e >>= fun e_t -> Ok (Type.Forall {a; tau=e_t} )
 
-
+  | Expr.TyApp {e; tau} ->
+    typecheck_expr ctx e >>= fun e_t ->
+    ( match e_t with
+      | Type.Forall tyExpr-> Ok (Ast_util.Type.substitute tyExpr.a tau tyExpr.tau)
+      | _ -> Error (Printf.sprintf "Type-application on non-polymorphic expression %s of type %s"
+                      (Expr.to_string e) (Type.to_string e_t))
+    )
 
   (* Add more cases here! *)
 

@@ -20,7 +20,9 @@ module Type = struct
     | Sum {left; right} -> Sum {
         left = f left;
         right = f right}
-    | Var _ -> f expr
+
+    (* No idea how to map_field. Calling this function on them is an error. *)
+    | (Var _ | Forall _ ) -> raise Unimplemented
     | _ -> raise Unimplemented
 
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
@@ -30,6 +32,10 @@ module Type = struct
     | Var v -> (match String.Map.find rename v with
         | None -> tau
         | Some x -> x )
+    | Forall {a ; tau} ->
+      let a' = fresh a in
+      let rename = String.Map.set rename ~key:a ~data:(Var a') in
+      Forall {a = a'; tau = substitute_map rename tau}
     (* Add more cases here! *)
     | _ -> raise Unimplemented
 
@@ -42,6 +48,10 @@ module Type = struct
       | (Num | Bool | Unit | Fn _ | Product _ | Sum _ ) ->
         map_field tau ~f:(aux depth)
       | (Var _) -> Var "_"
+      | Forall {a; tau} ->
+        let depth = String.Map.map depth (fun x -> x + 1) in
+        let depth = String.Map.set depth ~key:a ~data:0 in
+        Forall {a = "_"; tau = aux depth tau}
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
@@ -131,6 +141,11 @@ module Expr = struct
         lam = f lam;
         arg = f arg }
 
+    (* Note: According to the reference program,
+     * both DeBruijn index or substituion ignore typing information of following expressions. *)
+    | TyApp {e; tau} -> TyApp {e = f e; tau}
+    | TyLam {a; e} -> TyLam {e = f e; a}
+
     (* No idea how to apply. It's an error to call this function on them. *)
     | ((Lam _) | (Var _) | (Case _) | Inject _) -> raise Unimplemented
 
@@ -138,7 +153,7 @@ module Expr = struct
 
   let rec substitute_map (rename : t String.Map.t) (e : t) : t =
     match e with
-    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ ) ->
+    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ | TyApp _ | TyLam _) ->
       map_field e ~f:(substitute_map rename)
     | Var v ->
       (match String.Map.find rename v with
@@ -203,6 +218,10 @@ module Expr = struct
         let depth = String.Map.map depth (fun x -> x + 1) in
         let depth = String.Map.set depth ~key:x ~data:0 in
         Fix {x = "_"; tau = Var "_"; e = aux depth e}
+
+      | TyLam {a; e} -> TyLam {a = "_"; e = aux depth e}
+
+      | TyApp {e; tau} -> TyApp {tau = Ast.Type.Var "_"; e = aux depth e}
 
       (* Add more cases here! *)
       | _ -> raise Unimplemented
@@ -269,11 +288,10 @@ module Expr = struct
     assert (not (aequiv (p "fun (x : num) -> fun (x : num) -> x + x")
                    (p "fun (x : num) -> fun (y : num) -> y + x")));
 
-    (** generic functions --
     assert (
       aequiv
         (p "tyfun a -> fun (x : a) -> x")
-        (p "tyfun b -> fun (x : b) -> x")); *)
+        (p "tyfun b -> fun (x : b) -> x"));
 
     ()
 
