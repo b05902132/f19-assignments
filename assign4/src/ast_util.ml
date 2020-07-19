@@ -22,7 +22,7 @@ module Type = struct
         right = f right}
 
     (* No idea how to map_field. Calling this function on them is an error. *)
-    | (Var _ | Forall _ | Rec _ ) -> raise Unimplemented
+    | (Var _ | Forall _ | Rec _ | Exists _) -> raise Unimplemented
     | _ -> raise Unimplemented
 
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
@@ -40,8 +40,10 @@ module Type = struct
       let a' = fresh a in
       let rename = String.Map.set rename ~key:a ~data:(Var a') in
       Rec {a = a'; tau = substitute_map rename tau}
-    (* Add more cases here! *)
-    | _ -> raise Unimplemented
+    | Exists {a; tau} ->
+      let a' = fresh a in
+      let rename = String.Map.set rename ~key:a ~data:(Var a') in
+      Exists {a = a'; tau = substitute_map rename tau}
 
   let substitute (x : string) (tau' : t) (tau : t) : t =
     substitute_map (String.Map.singleton x tau') tau
@@ -60,8 +62,10 @@ module Type = struct
         let depth = String.Map.map depth (fun x -> x + 1) in
         let depth = String.Map.set depth ~key:a ~data:0 in
         Rec {a = "_"; tau = aux depth tau}
-      (* Add more cases here! *)
-      | _ -> raise Unimplemented
+      | Exists {a;tau} ->
+        let depth = String.Map.map depth (fun x -> x + 1) in
+        let depth = String.Map.set depth ~key:a ~data: 0 in
+        Exists {a = "_"; tau = aux depth tau}
     in
     aux String.Map.empty tau
 
@@ -150,6 +154,7 @@ module Expr = struct
         arg = f arg }
     | Fold_ {e; tau} -> Fold_ {e = f e; tau}
     | Unfold e -> Unfold (f e)
+    | Export {e; tau_adt; tau_mod} -> Export {e = f e; tau_adt; tau_mod}
 
     (* Note: According to the reference program,
      * both DeBruijn index or substituion ignore typing information of following expressions. *)
@@ -157,14 +162,14 @@ module Expr = struct
     | TyLam {a; e} -> TyLam {e = f e; a}
 
     (* No idea how to apply. It's an error to call this function on them. *)
-    | ((Lam _) | (Var _) | (Case _) | Inject _) -> raise Unimplemented
+    | ((Lam _) | (Var _) | (Case _) | Inject _ | Import _) -> raise Unimplemented
 
     | _ -> raise Unimplemented
 
   let rec substitute_map (rename : t String.Map.t) (e : t) : t =
     match e with
     | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ | TyApp _ | TyLam _
-      | Fold_ _ | Unfold _) ->
+      | Fold_ _ | Unfold _ | Export _ ) ->
       map_field e ~f:(substitute_map rename)
     | Var v ->
       (match String.Map.find rename v with
@@ -191,6 +196,11 @@ module Expr = struct
       let x' = fresh x in
       let rename = String.Map.set rename ~key:x ~data:(Var x') in
       Fix {x = x'; tau; e = substitute_map rename e}
+
+    | Import {x; a; e_mod; e_body} ->
+      let x' = fresh x in
+      let rename' = String.Map.set rename ~key:x ~data:(Var x') in
+      Import {x = x'; a; e_mod = substitute_map rename e_mod; e_body = substitute_map rename' e_body}
 
     (* Put more cases here! *)
     | _ -> raise Unimplemented
@@ -235,6 +245,14 @@ module Expr = struct
       | TyApp {e; tau} -> TyApp {tau = Ast.Type.Var "_"; e = aux depth e}
 
       | Fold_ {e; tau} -> Fold_ {tau = Ast.Type.Var "_"; e = aux depth e}
+
+      | Export {e; tau_adt; tau_mod} ->
+        Export {e = aux depth e; tau_adt = Ast.Type.Var "_"; tau_mod = Ast.Type.Var "_" }
+
+      | Import {x; a; e_mod; e_body} ->
+        let new_depth = String.Map.map depth ~f:(fun x -> x + 1) in
+        let new_depth = String.Map.set new_depth ~key:x ~data:0 in
+        Import {x = "_"; a = "_"; e_mod = aux depth e_mod; e_body = aux new_depth e_body}
 
       (* Add more cases here! *)
       | _ -> raise Unimplemented

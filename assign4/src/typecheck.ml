@@ -162,9 +162,28 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
                        (Expr.to_string e) (Type.to_string e_t) )
     )
 
-  (* Add more cases here! *)
-
-  | _ -> raise Unimplemented
+  | Expr.Export {e; tau_adt; tau_mod} -> 
+    ( match tau_mod with
+      | Type.Exists{a; tau} -> 
+        typecheck_expr ctx e >>= fun e_t ->
+        let expected_e_t = Ast_util.Type.substitute a tau_adt tau in
+            if aequiv e_t expected_e_t
+            then Ok tau_mod
+            else Error ( Printf.sprintf "Cannot export expression (%s : %s) as %s: Expect an expression of type %s"
+                           (Expr.to_string e) (Type.to_string e_t) (Type.to_string tau_mod) (Type.to_string expected_e_t) )
+      | _ -> Error ( Printf.sprintf "Trying to export as non-existential type %s" (Type.to_string tau_mod) )
+    )
+  | Expr.Import {x;a;e_mod;e_body} ->
+    typecheck_expr ctx e_mod >>= fun e_mod_t ->
+    ( match e_mod_t with
+      | Type.Exists ext ->
+        let x_t = Ast_util.Type.substitute ext.a (Type.Var a) ext.tau in
+        let ctx = String.Map.set ctx ~key:x ~data: x_t in
+        typecheck_expr ctx e_body
+          
+      | _ -> Error ( Printf.sprintf "Cannnot import (%s : %s) : No an existential type."
+                       (Expr.to_string e_mod) (Type.to_string e_mod_t) )
+    )
 
 let typecheck t = typecheck_expr String.Map.empty t
 

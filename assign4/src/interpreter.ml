@@ -82,6 +82,12 @@ let rec trystep (e : Expr.t) : outcome =
     (e, fun e' -> Unfold e') |-> fun () ->
     ( match e with Expr.Fold_ {e; tau} -> Step e)
 
+  | Expr.Import {x;a;e_mod;e_body} ->
+    (e_mod, fun e_mod' -> Expr.Import {x;a;e_mod = e_mod'; e_body}) |-> fun () ->
+      ( match e_mod with Expr.Export {e;_} ->
+          Step (Ast_util.Expr.substitute x e e_body)
+      )
+
   (* Add more cases here! *)
 
   | _ -> raise (RuntimeError (
