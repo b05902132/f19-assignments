@@ -142,6 +142,26 @@ let rec typecheck_expr (ctx : Type.t String.Map.t) (e : Expr.t)
                       (Expr.to_string e) (Type.to_string e_t))
     )
 
+  | Expr.Fold_ {e; tau} ->
+    typecheck_expr ctx e >>= fun e_t ->
+    ( match tau with
+      | Type.Rec r ->
+        let tau_exp = Ast_util.Type.substitute r.a tau r.tau in
+        if aequiv tau_exp e_t
+            then Ok tau
+            else Error ( Printf.sprintf "Folded expr %s of type %s does not match recursive type one-step unfolding %s"
+                            (Expr.to_string e) (Type.to_string e_t) (Type.to_string tau_exp)
+                       )
+      | _ -> Error (Printf.sprintf "Provided fold type %s is not recursive" (Type.to_string tau) )
+    )
+  | Expr.Unfold e ->
+    typecheck_expr ctx e >>= fun e_t ->
+    ( match e_t with
+      | Type.Rec r -> Ok (Ast_util.Type.substitute r.a e_t r.tau)
+      | _ -> Error ( Printf.sprintf "Unfolding expression %s with non-recursive type %s"
+                       (Expr.to_string e) (Type.to_string e_t) )
+    )
+
   (* Add more cases here! *)
 
   | _ -> raise Unimplemented

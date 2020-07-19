@@ -79,6 +79,10 @@ let rec trystep (e : Expr.t) : outcome =
     (e, fun e' -> TyApp {e=e'; tau} ) |-> fun () ->
     ( match e with TyLam {e; _} -> Step e )
 
+  | Expr.Unfold e ->
+    (e, fun e' -> Unfold e') |-> fun () ->
+    ( match e with Expr.Fold_ {e; tau} -> Step e)
+
   (* Add more cases here! *)
 
   | _ -> raise (RuntimeError (

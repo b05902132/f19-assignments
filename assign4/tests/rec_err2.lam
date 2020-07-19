@@ -1,0 +1,4 @@
+letrec f : unit -> (rec a . a) = fun (u:unit) -> f ()
+in
+fold (f () ) as bool
+

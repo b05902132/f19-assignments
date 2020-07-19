@@ -22,7 +22,7 @@ module Type = struct
         right = f right}
 
     (* No idea how to map_field. Calling this function on them is an error. *)
-    | (Var _ | Forall _ ) -> raise Unimplemented
+    | (Var _ | Forall _ | Rec _ ) -> raise Unimplemented
     | _ -> raise Unimplemented
 
   let rec substitute_map (rename : t String.Map.t) (tau : t) : t =
@@ -36,6 +36,10 @@ module Type = struct
       let a' = fresh a in
       let rename = String.Map.set rename ~key:a ~data:(Var a') in
       Forall {a = a'; tau = substitute_map rename tau}
+    | Rec {a; tau} ->
+      let a' = fresh a in
+      let rename = String.Map.set rename ~key:a ~data:(Var a') in
+      Rec {a = a'; tau = substitute_map rename tau}
     (* Add more cases here! *)
     | _ -> raise Unimplemented
 
@@ -52,6 +56,10 @@ module Type = struct
         let depth = String.Map.map depth (fun x -> x + 1) in
         let depth = String.Map.set depth ~key:a ~data:0 in
         Forall {a = "_"; tau = aux depth tau}
+      | Rec {a; tau} ->
+        let depth = String.Map.map depth (fun x -> x + 1) in
+        let depth = String.Map.set depth ~key:a ~data:0 in
+        Rec {a = "_"; tau = aux depth tau}
       (* Add more cases here! *)
       | _ -> raise Unimplemented
     in
@@ -140,6 +148,8 @@ module Expr = struct
     | App {lam; arg} -> App {
         lam = f lam;
         arg = f arg }
+    | Fold_ {e; tau} -> Fold_ {e = f e; tau}
+    | Unfold e -> Unfold (f e)
 
     (* Note: According to the reference program,
      * both DeBruijn index or substituion ignore typing information of following expressions. *)
@@ -153,7 +163,8 @@ module Expr = struct
 
   let rec substitute_map (rename : t String.Map.t) (e : t) : t =
     match e with
-    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ | TyApp _ | TyLam _) ->
+    | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ | TyApp _ | TyLam _
+      | Fold_ _ | Unfold _) ->
       map_field e ~f:(substitute_map rename)
     | Var v ->
       (match String.Map.find rename v with
@@ -190,7 +201,7 @@ module Expr = struct
   let rec to_debruijn (e : t) : t =
     let rec aux (depth : int String.Map.t) (e : t) : t =
       match e with
-      | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _) ->
+      | (Num _ | True | False | Unit | Binop _ | If _ | And _ | Or _ | Relop _ | Pair _ | Project _ | App _ | Unfold _) ->
         map_field e ~f:(aux depth)
 
       | Var x ->
@@ -222,6 +233,8 @@ module Expr = struct
       | TyLam {a; e} -> TyLam {a = "_"; e = aux depth e}
 
       | TyApp {e; tau} -> TyApp {tau = Ast.Type.Var "_"; e = aux depth e}
+
+      | Fold_ {e; tau} -> Fold_ {tau = Ast.Type.Var "_"; e = aux depth e}
 
       (* Add more cases here! *)
       | _ -> raise Unimplemented
