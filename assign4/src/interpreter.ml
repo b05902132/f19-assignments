@@ -53,7 +53,6 @@ let rec trystep (e : Expr.t) : outcome =
 
   | Expr.App {lam; arg} ->
     (lam, fun lam' -> Expr.App {lam=lam'; arg}) |-> fun () ->
-    (arg, fun arg' -> Expr.App {lam;arg=arg'}) |-> fun () ->
       Step (match lam with Expr.Lam{x; e; _} -> Ast_util.Expr.substitute x arg e)
 
   | Expr.Project {e; d} ->
